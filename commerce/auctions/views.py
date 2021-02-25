@@ -8,7 +8,7 @@ from django.urls import reverse
 from .models import User, Category, Listing, Watchlist, Bid, Comment
 import datetime
 
-from .modelforms import CommentForm
+from .modelforms import CommentForm, BidForm
 
 def index(request):
     return render(request, "auctions/index.html", {
@@ -101,14 +101,13 @@ def add(request):
 def listing(request, listing_id):
     user=get_user(request)
     error_msg=""
-    comment_form = CommentForm()
+    message_winner=""
 
     if request.method == "POST":
         listing = Listing.objects.get(pk=listing_id)
         watched_listings = user.watcher.values_list("listing", flat=True)
         
-
-        # simulate a switch, based on "action" to switch between toggling the watchlist, comment, bid.
+        # simulate a switch, based on "action" to deal with toggling the watchlist, comment, bid.
         action = request.POST["action"]
         if action == "toggle_watchlist":
             if listing.id in watched_listings:
@@ -118,7 +117,9 @@ def listing(request, listing_id):
                 wl_obj = Watchlist(user=user, listing=listing)
                 wl_obj.save()
         if action == "place_bid":
-            bid_price = int(request.POST["bid"])
+            bid_form = BidForm(request.POST)
+            bid_form.is_valid()
+            bid_price = bid_form.cleaned_data["price"]
             # get bids on this listing
             bids = listing.bided.all()
             bids_count = bids.count()
@@ -142,32 +143,20 @@ def listing(request, listing_id):
                 else:
                     error_msg="Your bid must be equal or higher than the current price"
         if action == "close_auction":
-            # change listing.is_active
             listing.is_active = False
             listing.save()
             # the user with the highest bid has a message on the listing page (which is inactive: user has to access the listing by typing his url)
         if action == "add_comment":
-            comment = request.POST["comment"]
-            print(comment)
-            # if comment empty --> pass
-            if comment == "":
-                pass
-            else:
-                comment_obj = Comment(listing=listing, user=user, text=comment)
-                comment_obj.save()
+            comment_form = CommentForm(request.POST)
+            comment_form.is_valid()
+            comment = comment_form.cleaned_data['text']
+            comment_obj = Comment(listing=listing, user=user, text=comment)
+            comment_obj.save()
         # end of switch
         if listing.id in user.watcher.values_list("listing", flat=True):
             is_watched = True
         else:
             is_watched = False
-        return render(request, "auctions/listing.html", {
-            "comment_form": comment_obj,
-            "listing": Listing.objects.get(pk=listing_id),
-            "is_watched": is_watched,
-            "error_msg": error_msg,
-            "bids_count": listing.bided.all().count(),
-            "comments": listing.commented.all().order_by("date").reverse()
-        })
     # GET method
     else:
         # check if the asked listing exist (active or not)
@@ -185,19 +174,22 @@ def listing(request, listing_id):
                     is_watched = True
                 if not listing.is_active and listing.bided.order_by("price").last().user == user:
                     message_winner = "You won this auction"
-            return render(request, "auctions/listing.html", {
-                "listing": listing,
-                "is_watched": is_watched,
-                "bids_count": listing.bided.all().count(), 
-                "message_winner": message_winner,
-                "comments": listing.commented.all().order_by("date").reverse()
-            })
         # if the asked listing doesn't exist, redirect to index + a fail message
         else:
             return render(request, "auctions/index.html", {
-                "comment_form": comment_form,
                 "message": True,
                 "listings": Listing.objects.filter(is_active=True)
+            })
+    # Generate the views for both GET and POST method
+    return render(request, "auctions/listing.html", {
+                "listing": listing,
+                "is_watched": is_watched,
+                "bids_count": listing.bided.all().count(), 
+                "bid_form": BidForm(),
+                "error_msg": error_msg,
+                "message_winner": message_winner,
+                "comment_form": CommentForm(),
+                "comments": listing.commented.all().order_by("date").reverse()
             })
 
 @login_required

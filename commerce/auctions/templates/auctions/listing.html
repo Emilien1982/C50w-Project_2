@@ -39,8 +39,9 @@
             {% else %}
                 <input name="action" value="place_bid" hidden>
                 <p class="mb-1 text-secondary" style="font-size: smaller;">{{ bids_count }} bid(s) so far.</p>
-                <input class="form-control" type="number" name="bid" placeholder="Bid">
-                <input type="submit" class="btn btn-sm btn-primary mt-2" value="Place Bid">
+                {{ bid_form }}
+<!--                 <input class="form-control" type="number" name="bid" placeholder="Bid">
+ -->                <input type="submit" class="btn btn-sm btn-primary mt-2" value="Place Bid">
             {% endif %}
             </form>
         {% endif %}
