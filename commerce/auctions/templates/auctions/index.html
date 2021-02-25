@@ -8,14 +8,14 @@
         <div class="container-fluid">
             <a href="{% url 'listing' listing.id %}">
                 <div class="row my-2">
-                    <div class="col-10 col-md-4 bg-info">
+                    <div class="col-10 col-md-5 col-lg-4">
                         {% if listing.image_url %}
                             <img src="{{ listing.image_url }}" alt="{{ listing.title }}" style="width: 300px;">
                         {% else %}
                             <img src="../../static/auctions/img/no-image.png" alt="no image available" style="width: 300px;">
                         {% endif %}
                     </div>
-                    <div class="col-8 bg-warning">
+                    <div class="col-6">
                         <h3>{{ listing.title }}</h3>
                         <h4>Price: ${{ listing.current_price }}</h4>
                         <p>{{ listing.description }}</p>

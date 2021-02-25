@@ -91,8 +91,7 @@ def add(request):
             current_price=start_price,
             image_url=image_url)
         new_listing.save()
-        # REDIRIGER VERS LA PAGE DU LISTING (quand elle sera créé)
-        return HttpResponseRedirect(reverse("index"))
+        return HttpResponseRedirect(reverse("listing", args=(new_listing.id,)))
     else:
         return render(request, "auctions/add.html", {
             "categories": Category.objects.all()
@@ -105,11 +104,11 @@ def listing(request, listing_id):
 
     if request.method == "POST":
         listing = Listing.objects.get(pk=listing_id)
-        watched_listings = user.watcher.values_list("listing", flat=True)
         
         # simulate a switch, based on "action" to deal with toggling the watchlist, comment, bid.
         action = request.POST["action"]
         if action == "toggle_watchlist":
+            watched_listings = user.watcher.values_list("listing", flat=True)
             if listing.id in watched_listings:
                 wl_obj = user.watcher.filter(listing=listing.id)
                 wl_obj.delete()
@@ -219,3 +218,17 @@ def category(request, category_id):
         })
     else: 
         return HttpResponseRedirect(reverse("categories"))
+
+def user_page(request, user_id):
+    existing_user_ids = User.objects.all().values_list("id", flat=True)
+    if user_id in existing_user_ids:
+        user_target = User.objects.get(id=user_id)
+        watched = user_target.watcher.all()
+        listings_id = watched.values_list("listing", flat=True)
+        return render(request, "auctions/user_page.html", {
+            "user_target": user_target,
+            "listings": user_target.seller.all(),
+            "watchlist": Listing.objects.filter(id__in=listings_id)
+        })
+    else:
+        return HttpResponseRedirect(reverse("index"))
