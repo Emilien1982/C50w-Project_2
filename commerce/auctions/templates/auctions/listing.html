@@ -59,7 +59,6 @@
     <div class="my-3">
         <h3>Details</h3>
         <ul>
-            <!-- IMPLEMENTER LE RETOUR VERS LA PAGE USER quand elle sera crée -->
             <li>Listed by: <a href="{% url 'user_page' listing.user.id %}">{{ listing.user.username }}</a></li>
             <li>Category: 
                 {% if listing.category %}
