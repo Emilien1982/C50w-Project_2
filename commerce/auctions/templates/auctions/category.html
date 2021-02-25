@@ -1,10 +1,9 @@
 {% extends "auctions/layout.html" %}
 
-
 {% block body %}
-    <h2>Active Listings</h2>
-
-    {% for listing in listings %}
+    <h2>Category {{ category.name }}:</h2>
+    <ul>
+        {% for listing in listings %}
         <div class="container-fluid">
             <a href="{% url 'listing' listing.id %}">
                 <div class="row my-2">
@@ -24,5 +23,6 @@
                 </div>
             </a>
         </div>
-    {% endfor %}
+        {% endfor %}
+    </ul>
 {% endblock %}
